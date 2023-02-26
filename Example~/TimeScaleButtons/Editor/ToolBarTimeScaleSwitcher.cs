@@ -1,76 +1,73 @@
-﻿using System.Globalization;
+﻿@@ -0,0 +1,72 @@
+using System.Globalization;
 using UnityEditor;
 using UnityEngine;
 
-namespace UnityToolbarExtender.Editor
+namespace UnityToolbarExtender.Examples
 {
-	internal static class ToolbarStyles
-	{
-		public static readonly GUIStyle CommandButtonStyle;
-		public static readonly GUIStyle LabelStyle;
+    internal static class ToolbarStyles
+    {
+        public static readonly GUIStyle CommandButtonStyle;
+        public static readonly GUIStyle LabelStyle;
 		
-		static ToolbarStyles()
-		{
-			CommandButtonStyle = new GUIStyle("Command")
-			{
-				fontSize = 11,
-				alignment = TextAnchor.MiddleCenter,
-				imagePosition = ImagePosition.ImageAbove,
-				fontStyle = FontStyle.Bold
-			};
+        static ToolbarStyles()
+        {
+            CommandButtonStyle = new GUIStyle("Command")
+            {
+                fontSize = 11,
+                alignment = TextAnchor.MiddleCenter,
+                imagePosition = ImagePosition.ImageAbove,
+                fontStyle = FontStyle.Bold
+            };
+	
+            LabelStyle = new GUIStyle("Label")
+            {
+                fontSize = 14,
+                alignment = TextAnchor.MiddleCenter,
+                imagePosition = ImagePosition.TextOnly,
+                fontStyle = FontStyle.Bold
+            };
+        }
+    }
 
-			LabelStyle = new GUIStyle("Label")
-			{
-				fontSize = 14,
-				alignment = TextAnchor.MiddleCenter,
-				imagePosition = ImagePosition.TextOnly,
-				fontStyle = FontStyle.Bold
-			};
-		}
-	}
+    [InitializeOnLoad]
+    public class ToolBarTimeScaleSwitcher
+    {
+        private const float _maxTimeScale = 100;
+        private const float _minTimeScale = 0.001f;
+        private const float _upMultiplier = 5f;
+        private const float _downMultiplier = 0.25f;
 
-	[InitializeOnLoad]
-	public class ToolBarTimeScaleSwitcher
-	{
-		private const float _maxTimeScale = 100;
-		private const float _minTimeScale = 0.001f;
+        static ToolBarTimeScaleSwitcher()
+        {
+            ToolbarExtender.LeftToolbarGUI.Add(OnToolbarGUI);
+        }
 		
-		static ToolBarTimeScaleSwitcher()
-		{
-			ToolbarExtender.LeftToolbarGUI.Add(OnToolbarGUI);
-		}
-		
-		private static void OnToolbarGUI()
-		{
-			if (!EditorApplication.isPlaying && !EditorApplication.isPaused)
-				return;
+        private static void OnToolbarGUI()
+        {
+            if (!EditorApplication.isPlaying && !EditorApplication.isPaused)
+            	return;
 
-			GUILayout.FlexibleSpace();
-			GUILayout.Label(Time.timeScale.ToString("#.###"), ToolbarStyles.LabelStyle);
-			GUILayout.Space(10);
+            GUILayout.FlexibleSpace();
+            var text = Time.timeScale < 1
+                ? Time.timeScale.ToString("F3")
+                : Time.timeScale.ToString("N1");
+            GUILayout.Label(text, ToolbarStyles.LabelStyle);
+            GUILayout.Space(10);
 
-			if (GUILayout.Button(new GUIContent("x0.2", "Set timescale * 0.2"), ToolbarStyles.CommandButtonStyle))
-			{
-				Time.timeScale = Mathf.Clamp(Time.timeScale * 0.2f, _minTimeScale, _maxTimeScale);
-			}
-			if (GUILayout.Button(new GUIContent("x0.5", "Set timescale * x0.5"), ToolbarStyles.CommandButtonStyle))
-			{
-				Time.timeScale = Mathf.Clamp(Time.timeScale * 0.5f, _minTimeScale, _maxTimeScale);
-			}
-			if (GUILayout.Button(new GUIContent("1", "Set timescale = 1"), ToolbarStyles.CommandButtonStyle))
-			{
-				Time.timeScale = 1f;
-			}
-			if (GUILayout.Button(new GUIContent("x2", "Set timescale * 2 "), ToolbarStyles.CommandButtonStyle))
-			{
-				Time.timeScale = Mathf.Clamp(Time.timeScale * 2f, _minTimeScale, _maxTimeScale);
-			}
-			if (GUILayout.Button(new GUIContent("x5", "Set timescale * 5"), ToolbarStyles.CommandButtonStyle))
-			{
-				Time.timeScale = Mathf.Clamp(Time.timeScale * 5f, _minTimeScale, _maxTimeScale);
-			}
+            if (GUILayout.Button(new GUIContent($"x{_downMultiplier}", $"Set timescale * {_downMultiplier}"), ToolbarStyles.CommandButtonStyle))
+                SetTimeScale(_downMultiplier);
 
-			GUILayout.Space(10);
-		}
-	}
+            if (GUILayout.Button(new GUIContent("1", "Set timescale = 1"), ToolbarStyles.CommandButtonStyle))
+                SetTimeScale(1f / Time.timeScale);
+
+            if (GUILayout.Button(new GUIContent($"x{_upMultiplier}", $"Set timescale * {_upMultiplier}"), ToolbarStyles.CommandButtonStyle))
+                SetTimeScale(_upMultiplier);
+        }
+
+        private static void SetTimeScale(float value)
+        {
+            Time.timeScale = Mathf.Clamp(Time.timeScale * value, _minTimeScale, _maxTimeScale);
+        }
+    }
 }
